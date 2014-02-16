@@ -8,7 +8,7 @@ import about
 import setuptools
 
 metadata = about.get_metadata("about_wave", "audio")
-contents = dict(py_modules="about.wave")
+contents = dict(packages=setuptools.find_packages())
 requirements = dict(install_requires=\
                     ["numpy", "bitstream", "script", "lsprofcalltree"])
 
