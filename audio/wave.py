@@ -43,11 +43,7 @@ import time
 
 # Third-Party Libraries
 from numpy import *
-# TODO: delay this import so that we can log a warning with proper verbosity ?
-try:
-    import lsprofcalltree
-except ImportError:
-    lsprofcalltree = None
+import lsprofcalltree
 
 # Digital Audio Coding
 from bitstream import BitStream
@@ -451,18 +447,12 @@ def profile(command):
    The argument `command` should be usable in an `exec` statement.
    The profile is stored in the file `wave.kcg`.
    """
-   if not lsprofcalltree:
-       message  = "profiling is disabled.\n"
-       message += "please install lsprofcalltree "
-       message += "(http://people.gnome.org/~johan/lsprofcalltree.py)."
-       logger.warning(message)
-   else:
-       output_file = open("wave.kcg", "w")   
-       profile = cProfile.Profile()
-       profile.run(command)
-       kcg_profile = lsprofcalltree.KCacheGrind(profile)
-       kcg_profile.output(output_file)
-       output_file.close()   
+   output_file = open("wave.kcg", "w")   
+   profile = cProfile.Profile()
+   profile.run(command)
+   kcg_profile = lsprofcalltree.KCacheGrind(profile)
+   kcg_profile.output(output_file)
+   output_file.close()   
    
 #
 # Unit Tests
@@ -605,16 +595,12 @@ usage:
 
 options: -h, --help ............................ display help message and exit,
          -o OUTPUT, --output=OUTPUT ............ select output filename,
-         -p, --profile ......................... generate kcachegrind data {pr}.
+         -p, --profile ......................... generate kcachegrind data,
          -s, --silent .......................... silent mode (may be repeated),
          -t, --test ............................ run the module self tests,
          -v, --verbose ......................... verbose mode (may be repeated).
 """
-    if lsprofcalltree:
-        profiling = "(on)"
-    else:
-        profiling = "(off)"
-    return message.format(filename=os.path.basename(__file__), pr=profiling)
+    return message.format(filename=os.path.basename(__file__))
 
 help.__doc__ = "\nReturn the following message:\n\n" + \
                "\n".join(4*" " + line for line in help().splitlines()) 
