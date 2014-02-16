@@ -52,6 +52,7 @@ except ImportError:
 # Digital Audio Coding
 from bitstream import BitStream
 import logger # TODO: convert to logfile, remove tagging, error hooks, etc.
+              # and add the dependency in the setup.py
 import script
 
 # TODO:
@@ -68,9 +69,8 @@ import script
 # Metadata
 # ------------------------------------------------------------------------------
 #
-__author__ = u"Sébastien Boisgérault <Sebastien.Boisgerault@mines-paristech.fr>"
-__version__ = "trunk"
-__license__ = "MIT License"
+
+from .about_wave import *
 
 #
 # Wave Writer
