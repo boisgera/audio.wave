@@ -63,6 +63,8 @@ import script
 #     UPDATE: do NOT allow these extra attributes BUT introduce an argument
 #     that is the number of samples to read. To get the number of channels,
 #     one can read 0 sample and query the shape of the returned array.
+#     Same thing for the "bit depath", (if we decide to support 8bits), 
+#     you can get it from the array data type if you read without scaling.
 
 #
 # Metadata
