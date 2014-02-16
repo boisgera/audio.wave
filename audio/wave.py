@@ -60,6 +60,9 @@ import script
 #     (instead of sample rate) ... and that's all ? Allow `dt` ? 
 #     Keep `num_channels` or don't keep it ? The motivation would
 #     be to have faster reads when `data` is not in the list ...
+#     UPDATE: do NOT allow these extra attributes BUT introduce an argument
+#     that is the number of samples to read. To get the number of channels,
+#     one can read 0 sample and query the shape of the returned array.
 
 #
 # Metadata
