@@ -66,6 +66,15 @@ import script
 #     Same thing for the "bit depath", (if we decide to support 8bits), 
 #     you can get it from the array data type if you read without scaling.
 
+# Q:  Should we declare/check against a list of 'vaiid' sample rates ? 
+#     The pb is that this list is application-dependent ... some apps will
+#     support many, other very little (or only 1) sample rate. 
+#     A tentative -- quite inclusive -- list would be:
+#     8000, 11025, 22050, 24000, 32000, 44100, 48000, 96000, etc. (HIGHER)
+#     should we WARN (with logger) when an invalid name is used ?
+#     Rk: we could also check that the given sample rate has a simple ratio
+#     either with 48000 or with 44100.
+
 #
 # Metadata
 # ------------------------------------------------------------------------------
