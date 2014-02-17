@@ -10,7 +10,9 @@ import setuptools
 metadata = about.get_metadata("about_wave", "audio")
 contents = dict(packages=setuptools.find_packages())
 requirements = dict(install_requires=\
-                    ["numpy", "bitstream", "script", "lsprofcalltree"])
+                    ["numpy", "bitstream", "logfile", "lsprofcalltree"])
+
+# other non-documented dependencies: 'script' (my own, no the one on pypi).
 
 info = {}
 info.update(metadata)
