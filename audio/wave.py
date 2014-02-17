@@ -21,6 +21,8 @@ WAVE format online information:
   - <http://www.tactilemedia.com/info/MCI_Control_Info.html>.
 """
 
+from __future__ import division
+
 #
 # Dependencies
 # ------------------------------------------------------------------------------
@@ -206,13 +208,13 @@ def write(data, output=None, info=None, scale=None):
     sample_rate = info.get("sample rate") or 44100
     stream.write(np.uint32(sample_rate).newbyteorder())
     bits_per_sample = 16
-    byte_rate = sample_rate * num_channels * (bits_per_sample / 8)
+    byte_rate = sample_rate * num_channels * (bits_per_sample // 8)
     stream.write(np.uint32(byte_rate).newbyteorder())
-    block_align = num_channels * bits_per_sample / 8
+    block_align = num_channels * bits_per_sample // 8
     stream.write(np.uint16(block_align).newbyteorder())
     stream.write(np.uint16(bits_per_sample).newbyteorder())
     stream.write("data")
-    sub_chunk2_size = num_samples * num_channels * (bits_per_sample / 8)
+    sub_chunk2_size = num_samples * num_channels * (bits_per_sample // 8)
     stream.write(np.uint32(sub_chunk2_size).newbyteorder())
 
     data = np.ravel(np.transpose(data))
@@ -399,11 +401,11 @@ def read_format(stream, info):
     if not bits_per_sample == 16:
         logfile.error("invalid bit depth {bits_per_sample}, "
               "only 16 bits/sample is supported.")
-    expected_block_align = num_channels * (bits_per_sample / 8)
+    expected_block_align = num_channels * (bits_per_sample // 8)
     if not block_align == expected_block_align:
         logfile.error("inconsistent number of bits per sample {block_align}, "
               "should be {expected_block_align}.")
-    expected_byte_rate = sample_rate * num_channels * (bits_per_sample / 8) 
+    expected_byte_rate = sample_rate * num_channels * (bits_per_sample // 8) 
     if not byte_rate == expected_byte_rate:
         logfile.error("inconsistent byte rate {byte_rate}, "
               "should be {expected_byte_rate} byte/s.")
@@ -417,7 +419,7 @@ def read_data(stream, info, min_chunk_size=1000000, wait=2.0):
        logfile.error("invalid data ID {data_ID} (only 'data' is supported).")
     size = stream.read(np.uint32).newbyteorder()
     bits_per_sample = 16
-    num_samples = int(size / (bits_per_sample / 8) / num_channels)
+    num_samples = size // (bits_per_sample // 8) // num_channels
     logfile.info("number of samples: {num_samples} (x{num_channels})")
     
     num_remain = num_samples * num_channels
@@ -486,8 +488,8 @@ Test write/read round trip consistency for integers.
     ...     stream = write(data)
     ...     return read(stream, scale=False)
 
-    >>> data = arange(-2**15, 2**15)
-    >>> all(data == int16_write_read(data))
+    >>> data = np.arange(-2**15, 2**15)
+    >>> (data == int16_write_read(data)).all()
     True
     """
 
@@ -502,11 +504,11 @@ Test write/read round trip consistency for floating-point numbers.
     ...     return read(stream)
 
     >>> input = [-1.0, 0.0, 1.0]
-    >>> output = ravel(float64_write_read(input))
+    >>> output = np.ravel(float64_write_read(input))
     >>> _ = assert_array_max_ulp(input, output, maxulp=1)
 
-    >>> input = arange(-2**15 + 1, 2**15) / float(2**15 - 1)
-    >>> output = ravel(float64_write_read(input))
+    >>> input = np.arange(-2**15 + 1, 2**15) / float(2**15 - 1)
+    >>> output = np.ravel(float64_write_read(input))
     >>> _= assert_array_max_ulp(input, output, maxulp=1)
     """
 
@@ -519,17 +521,17 @@ Integer input data:
     >>> input = [[-2**8, 0, 2**8]]
     >>> stream = write(input)
     >>> output = read(stream, scale=False)
-    >>> all(output == input)
+    >>> (output == input).all()
     True
 
     >>> stream = write(input, scale=False)
     >>> output = read(stream, scale=False)
-    >>> all(output == input)
+    >>> (output == input).all()
     True
 
     >>> stream = write(input, scale=True)
     >>> output = read(stream, scale=False)
-    >>> all(output == [[-2**15 + 1, 0, 2**15 - 1]])
+    >>> (output == [[-2**15 + 1, 0, 2**15 - 1]]).all()
     True
 
 Floating-point input data:
@@ -538,17 +540,17 @@ Floating-point input data:
     >>> from numpy.testing import assert_array_max_ulp
     >>> stream = write(input)
     >>> output = read(stream)
-    >>> all(abs(output - input) <= 2**(-15))
+    >>> (abs(output - input) <= 2**(-15)).all()
     True
 
     >>> stream = write(input, scale=True)
     >>> output = read(stream)
     >>> _ = assert_array_max_ulp(output, [[-1.0, 0.0, 1.0]], maxulp=1)
 
-    >>> input = arange(-2**15 + 1, 2**15).astype(float64)
+    >>> input = np.arange(-2**15 + 1, 2**15).astype(np.float64)
     >>> stream = write(input, scale=False)
     >>> output = read(stream, scale=False)
-    >>> all(output == input)
+    >>> (output == input).all()
     True
     """
 
@@ -566,7 +568,7 @@ Test the standard scaling policies of `read`.
     >>> input = [[0, 2**8]]
     >>> stream = write(input)
     >>> output = read(stream, scale=False)
-    >>> all(output == input)
+    >>> (output == input).all()
     True
 
     >>> input = [[0, 2**8]]
