@@ -27,8 +27,8 @@ WAVE format online information:
 # 
 #   - the standard Python 2.7 library,
 #   - the [NumPy](http://scipy.org/) library,
-#   - `logfile`, `script`, and `bitstream` from the digital audio coding project,
-#   - optionally, [`lsprofcalltree`][lsprofcalltree].
+#   - the `logfile`, `bitstream` and `lsprofcalltree` modules from PyPi,
+#   - the `script` (not publicly available yet).
 # 
 # [lsprofcalltree]: http://people.gnome.org/~johan/lsprofcalltree.py
 #
@@ -42,7 +42,7 @@ import sys
 import time
 
 # Third-Party Libraries
-from numpy import *
+import numpy as np
 import lsprofcalltree
 
 # Digital Audio Coding
@@ -157,19 +157,19 @@ def write(data, output=None, info=None, scale=None):
         file = None
         stream = BitStream()
 
-    data = array(data, copy=False)        
-    if len(shape(data)) == 1:
-        data = reshape(data, (1, len(data)))
+    data = np.array(data, copy=False)        
+    if len(np.shape(data)) == 1:
+        data = np.reshape(data, (1, len(data)))
 
     if scale is None:
-        if issubclass(data.dtype.type, floating):
+        if issubclass(data.dtype.type, np.floating):
             A = float(2**15 - 1)
         else:
             A = 1
     elif scale is False:
         A = 1
     elif scale is True:
-        A = float(2**15 - 1) / amax(abs(data))
+        A = float(2**15 - 1) / np.amax(abs(data))
     elif isinstance(scale, (int, float)):
         A = scale
     elif callable(scale):
@@ -180,52 +180,52 @@ def write(data, output=None, info=None, scale=None):
     data = A * data
 
     # clip what's not in the [-2**15, 2**15) range
-    if data.dtype.type != int16:
-        ones_ = ones(shape(data))
+    if data.dtype.type != np.int16:
+        ones_ = np.ones_like(data)
         low  = (-2**15    ) * ones_
         high = ( 2**15 - 1) * ones_
-        data = clip(data, low, high)
-        data = data.astype(int16)
+        data = np.clip(data, low, high)
+        data = data.astype(np.int16)
 
     info = info or {}
  
     # TODO: log some info.
   
-    num_channels, num_samples = shape(data)
-    file_size = 44 + 2 * size(data) # size in bytes
+    num_channels, num_samples = np.shape(data)
+    file_size = 44 + 2 * np.size(data) # size in bytes
     stream.write("RIFF")
     chunk_size = file_size - 8
-    stream.write(uint32(chunk_size).newbyteorder())
+    stream.write(np.uint32(chunk_size).newbyteorder())
     stream.write("WAVE")
     stream.write("fmt ")
     sub_chunk1_size = 16
-    stream.write(uint32(sub_chunk1_size).newbyteorder())
+    stream.write(np.uint32(sub_chunk1_size).newbyteorder())
     audio_format = 1
-    stream.write(uint16(audio_format).newbyteorder())
-    stream.write(uint16(num_channels).newbyteorder())
+    stream.write(np.uint16(audio_format).newbyteorder())
+    stream.write(np.uint16(num_channels).newbyteorder())
     sample_rate = info.get("sample rate") or 44100
-    stream.write(uint32(sample_rate).newbyteorder())
+    stream.write(np.uint32(sample_rate).newbyteorder())
     bits_per_sample = 16
     byte_rate = sample_rate * num_channels * (bits_per_sample / 8)
-    stream.write(uint32(byte_rate).newbyteorder())
+    stream.write(np.uint32(byte_rate).newbyteorder())
     block_align = num_channels * bits_per_sample / 8
-    stream.write(uint16(block_align).newbyteorder())
-    stream.write(uint16(bits_per_sample).newbyteorder())
+    stream.write(np.uint16(block_align).newbyteorder())
+    stream.write(np.uint16(bits_per_sample).newbyteorder())
     stream.write("data")
     sub_chunk2_size = num_samples * num_channels * (bits_per_sample / 8)
-    stream.write(uint32(sub_chunk2_size).newbyteorder())
+    stream.write(np.uint32(sub_chunk2_size).newbyteorder())
 
-    data = ravel(transpose(data))
-    stream.write(int16(data).newbyteorder())
+    data = np.ravel(np.transpose(data))
+    stream.write(np.int16(data).newbyteorder())
 
     if file:
         file.write(stream.read(str))
         try:
             file.close()
-        except Attributeerror:
+        except AttributeError:
             try:
                file.flush()
-            except Attributeerror:
+            except AttributEerror:
                pass
     elif output is None:
         return stream        
@@ -315,8 +315,8 @@ def read(input, info=None, scale=None):
     # PARTIAL copy in bitstream !
     if stream_copy.read(str, 4) == "LIST":
         assert stream.read(str, 4) == "LIST"
-        num_bytes = stream.read(uint32).newbyteorder()
-        _ = stream.read(uint8, num_bytes)
+        num_bytes = stream.read(np.uint32).newbyteorder()
+        _ = stream.read(np.uint8, num_bytes)
     # Rk: not very general, will work only with a single LIST chunk ...
     data = read_data(stream, info)
 
@@ -325,7 +325,7 @@ def read(input, info=None, scale=None):
     elif scale is False:
         A = 1
     elif scale is True:
-        A = 1.0 / amax(abs(data))
+        A = 1.0 / np.amax(abs(data))
     elif isinstance(scale, (int, float)):
         A = scale
     elif callable(scale):
@@ -337,7 +337,7 @@ def read(input, info=None, scale=None):
     try:
         if file:
             file.close()
-    except AttributEerror:
+    except AttributError:
         pass
 
     logfile.debug("data loaded.")
@@ -361,7 +361,7 @@ def read_header(stream, info):
     magic = stream.read(str, 4)
     if magic != "RIFF":
         logfile.error("invalid magic number {magic!r} (only 'RIFF' is supported).")
-    chunk_size = stream.read(uint32).newbyteorder()
+    chunk_size = stream.read(np.uint32).newbyteorder()
     logfile.debug("chunk size: {chunk_size} bytes.")
 
     if (chunk_size + 8) != file_size:
@@ -377,25 +377,25 @@ def read_format(stream, info):
     format = stream.read(str, 4)
     if format != "fmt ":
        logfile.error("invalid format {format!r}, only 'fmt ' is supported.")
-    size = stream.read(uint32).newbyteorder()
+    size = stream.read(np.uint32).newbyteorder()
     if size != 16:
         logfile.error("inconsistent format chunk size {size}, should be 16 bits.")
-    audio_format = stream.read(uint16).newbyteorder()
+    audio_format = stream.read(np.uint16).newbyteorder()
     if audio_format != 1:
        logfile.error("invalid audio format {audio_format}, only PCM (1) is supported.")
-    num_channels = stream.read(uint16).newbyteorder()
+    num_channels = stream.read(np.uint16).newbyteorder()
     info["num channels"] = num_channels
     if num_channels not in (1, 2):
         logfile.error("invalid number of channels {num_channels}, "
               "neither mono (1) nor stereo (2).")
     logfile.info("number of channels: {0}".format(num_channels))
-    sample_rate = stream.read(uint32).newbyteorder()
+    sample_rate = stream.read(np.uint32).newbyteorder()
     info["sample rate"] = sample_rate
     #if sample_rate != 44100:
     #    logfile.error("invalid sample rate {sample_rate}, only 44100 Hz is supported.")
-    byte_rate = stream.read(uint32).newbyteorder()
-    block_align = stream.read(uint16).newbyteorder()
-    bits_per_sample = stream.read(uint16).newbyteorder()
+    byte_rate = stream.read(np.uint32).newbyteorder()
+    block_align = stream.read(np.uint16).newbyteorder()
+    bits_per_sample = stream.read(np.uint16).newbyteorder()
     if not bits_per_sample == 16:
         logfile.error("invalid bit depth {bits_per_sample}, "
               "only 16 bits/sample is supported.")
@@ -415,7 +415,7 @@ def read_data(stream, info, min_chunk_size=1000000, wait=2.0):
     data_ID = stream.read(str, 4)
     if data_ID != "data":
        logfile.error("invalid data ID {data_ID} (only 'data' is supported).")
-    size = stream.read(uint32).newbyteorder()
+    size = stream.read(np.uint32).newbyteorder()
     bits_per_sample = 16
     num_samples = int(size / (bits_per_sample / 8) / num_channels)
     logfile.info("number of samples: {num_samples} (x{num_channels})")
@@ -423,13 +423,13 @@ def read_data(stream, info, min_chunk_size=1000000, wait=2.0):
     num_remain = num_samples * num_channels
     # TODO: factor out the timing estimate pattern
     next_num_chunk = 0
-    data_chunks = [zeros((0,), dtype=int16)] 
+    data_chunks = [np.zeros((0,), dtype=np.int16)] 
     while num_remain > 0:
         num_chunk = max(min_chunk_size, next_num_chunk)
         if num_chunk > num_remain:
             num_chunk = num_remain
         start = time.time()
-        data_chunks.append(stream.read(int16, num_chunk).newbyteorder())
+        data_chunks.append(stream.read(np.int16, num_chunk).newbyteorder())
         delta = time.time() - start
         logfile.debug("chunk size: {num_chunk}")
         logfile.debug("chunk read time: {delta}")
@@ -438,8 +438,8 @@ def read_data(stream, info, min_chunk_size=1000000, wait=2.0):
         num_remain = num_remain - num_chunk
         next_num_chunk = int(wait / delta * num_chunk)
         logfile.debug("next chunk size: {next_num_chunk}")
-    data = concatenate(data_chunks)
-    data = transpose(reshape(data, (num_samples, num_channels)))
+    data = np.concatenate(data_chunks)
+    data = np.transpose(np.reshape(data, (num_samples, num_channels)))
     logfile.debug("end of the data chunk processing.")    
 
     return data
@@ -644,7 +644,7 @@ def main(args, options):
 
     data = read(filename)
     logfile.debug("saving the data in {output!r}.")
-    save(output_file, data)
+    np.save(output_file, data)
     logfile.debug("data saved.")
 
 if __name__ == "__main__":

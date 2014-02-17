@@ -3,7 +3,7 @@
 __project__ = "audio.wave"
 __author__  = u"Sébastien Boisgérault <Sebastien.Boisgerault@mines-paristech.fr>"
 __url__     = "https://github.com/boisgera/audio.wave"
-__version__ = "2.0.0-alpha.1"
+__version__ = "2.0.1"
 __license__ = "MIT License"
 
 export = "project author url version license".split()
