@@ -27,7 +27,7 @@ WAVE format online information:
 # 
 #   - the standard Python 2.7 library,
 #   - the [NumPy](http://scipy.org/) library,
-#   - `logger`, `script`, and `bitstream` from the digital audio coding project,
+#   - `logfile`, `script`, and `bitstream` from the digital audio coding project,
 #   - optionally, [`lsprofcalltree`][lsprofcalltree].
 # 
 # [lsprofcalltree]: http://people.gnome.org/~johan/lsprofcalltree.py
@@ -47,8 +47,7 @@ import lsprofcalltree
 
 # Digital Audio Coding
 from bitstream import BitStream
-import logger # TODO: convert to logfile, remove tagging, error hooks, etc.
-              # and add the dependency in the setup.py
+import logfile
 import script
 
 # TODO:
@@ -86,7 +85,6 @@ from .about_wave import *
 # Wave Writer
 # ------------------------------------------------------------------------------
 #
-@logger.tag("wave.write")
 def write(data, output=None, info=None, scale=None):
     r"""Wave Audio File Format Writer
 
@@ -237,8 +235,6 @@ def write(data, output=None, info=None, scale=None):
 # ------------------------------------------------------------------------------
 #
 
-        
-@logger.tag("wave.read")
 def read(input, info=None, scale=None):
     r"""
     Wave Audio File Format Reader
@@ -292,7 +288,7 @@ def read(input, info=None, scale=None):
       - `wave.write`,
       - `bitstream.BitStream`.
 """
-    logger.debug("loading the input.")
+    logfile.debug("loading the input.")
 
     if isinstance(input, str):
         file = open(input, "r")
@@ -307,13 +303,13 @@ def read(input, info=None, scale=None):
     if info is None:
         info = {}
 
-    _read_header_chunk(stream, info)
-    _read_format_chunk(stream, info)
+    read_header(stream, info)
+    read_format(stream, info)
     # TODO: need to take care of possible "LIST" chunks.
     # More generally, there is a pattern of 4 str (magic) + size (uint32)
     # then the data. We should exploit this structure in the code ...
 
-    # hack so that I don't have to change the code of _read_data_chunk.
+    # hack so that I don't have to change the code of read_data.
     # TODO: log the data in LIST
     stream_copy = stream.copy() # WOW, OMG, EVERYTHING IS COPIED. Should allow
     # PARTIAL copy in bitstream !
@@ -322,7 +318,7 @@ def read(input, info=None, scale=None):
         num_bytes = stream.read(uint32).newbyteorder()
         _ = stream.read(uint8, num_bytes)
     # Rk: not very general, will work only with a single LIST chunk ...
-    data = _read_data_chunk(stream, info)
+    data = read_data(stream, info)
 
     if scale is None:
         A = 1.0 / float(2**15 - 1)
@@ -344,87 +340,85 @@ def read(input, info=None, scale=None):
     except AttributEerror:
         pass
 
+    logfile.debug("data loaded.")
+
     return data
 
-
-@logger.tag("wave.read.header")
-def _read_header_chunk(stream, info):
-    logger.debug("start of the header processing.")
+def read_header(stream, info):
+    logfile.debug("start of the header processing.")
     assert (len(stream) % 8 == 0)
     file_size = len(stream) / 8
     if file_size < 1024:
         file_size_B = file_size
-        logger.info("file size: {file_size_B} B")
+        logfile.info("file size: {file_size_B} B")
     elif file_size < 1024 * 1024:
         file_size_KiB = round(file_size / 1024.0, 1)
-        logger.info("file_size: {file_size_KiB:.1f} KiB")
+        logfile.info("file_size: {file_size_KiB:.1f} KiB")
     else:
         file_size_MiB = round(file_size / 1024.0 / 1024.0, 1)
-        logger.info("file_size: {file_size_MiB:.1f} MiB")
-    logger.debug("file size (exact): {file_size} bytes.")
+        logfile.info("file_size: {file_size_MiB:.1f} MiB")
+    logfile.debug("file size (exact): {file_size} bytes.")
     magic = stream.read(str, 4)
     if magic != "RIFF":
-        logger.error("invalid magic number {magic!r} (only 'RIFF' is supported).")
+        logfile.error("invalid magic number {magic!r} (only 'RIFF' is supported).")
     chunk_size = stream.read(uint32).newbyteorder()
-    logger.debug("chunk size: {chunk_size} bytes.")
+    logfile.debug("chunk size: {chunk_size} bytes.")
 
     if (chunk_size + 8) != file_size:
-        logger.error("file size ({file_size} bytes) inconsistent with the "
+        logfile.error("file size ({file_size} bytes) inconsistent with the "
               "chunk size {chunk_size} bytes).")
     format = stream.read(str, 4)
     if format != "WAVE":
-        logger.error("the format {format!r} is not supported (only 'WAVE' is).")
-    logger.debug("end of the header processing.")
+        logfile.error("the format {format!r} is not supported (only 'WAVE' is).")
+    logfile.debug("end of the header processing.")
 
-@logger.tag("wave.read.format")
-def _read_format_chunk(stream, info):
-    logger.debug("start of the format chunk processing.")
+def read_format(stream, info):
+    logfile.debug("start of the format chunk processing.")
     format = stream.read(str, 4)
     if format != "fmt ":
-       logger.error("invalid format {format!r}, only 'fmt ' is supported.")
+       logfile.error("invalid format {format!r}, only 'fmt ' is supported.")
     size = stream.read(uint32).newbyteorder()
     if size != 16:
-        logger.error("inconsistent format chunk size {size}, should be 16 bits.")
+        logfile.error("inconsistent format chunk size {size}, should be 16 bits.")
     audio_format = stream.read(uint16).newbyteorder()
     if audio_format != 1:
-       logger.error("invalid audio format {audio_format}, only PCM (1) is supported.")
+       logfile.error("invalid audio format {audio_format}, only PCM (1) is supported.")
     num_channels = stream.read(uint16).newbyteorder()
     info["num channels"] = num_channels
     if num_channels not in (1, 2):
-        logger.error("invalid number of channels {num_channels}, "
+        logfile.error("invalid number of channels {num_channels}, "
               "neither mono (1) nor stereo (2).")
-    logger.info("number of channels: {0}".format(num_channels))
+    logfile.info("number of channels: {0}".format(num_channels))
     sample_rate = stream.read(uint32).newbyteorder()
     info["sample rate"] = sample_rate
     #if sample_rate != 44100:
-    #    logger.error("invalid sample rate {sample_rate}, only 44100 Hz is supported.")
+    #    logfile.error("invalid sample rate {sample_rate}, only 44100 Hz is supported.")
     byte_rate = stream.read(uint32).newbyteorder()
     block_align = stream.read(uint16).newbyteorder()
     bits_per_sample = stream.read(uint16).newbyteorder()
     if not bits_per_sample == 16:
-        logger.error("invalid bit depth {bits_per_sample}, "
+        logfile.error("invalid bit depth {bits_per_sample}, "
               "only 16 bits/sample is supported.")
     expected_block_align = num_channels * (bits_per_sample / 8)
     if not block_align == expected_block_align:
-        logger.error("inconsistent number of bits per sample {block_align}, "
+        logfile.error("inconsistent number of bits per sample {block_align}, "
               "should be {expected_block_align}.")
     expected_byte_rate = sample_rate * num_channels * (bits_per_sample / 8) 
     if not byte_rate == expected_byte_rate:
-        logger.error("inconsistent byte rate {byte_rate}, "
+        logfile.error("inconsistent byte rate {byte_rate}, "
               "should be {expected_byte_rate} byte/s.")
-    logger.debug("end of the format chunk processing.")
+    logfile.debug("end of the format chunk processing.")
 
-@logger.tag("wave.read.data")
-def _read_data_chunk(stream, info, min_chunk_size=1000000, wait=2.0):
-    logger.debug("start of the data chunk processing.")
+def read_data(stream, info, min_chunk_size=1000000, wait=2.0):
+    logfile.debug("start of the data chunk processing.")
     num_channels = info.get("num channels")
     data_ID = stream.read(str, 4)
     if data_ID != "data":
-       logger.error("invalid data ID {data_ID} (only 'data' is supported).")
+       logfile.error("invalid data ID {data_ID} (only 'data' is supported).")
     size = stream.read(uint32).newbyteorder()
     bits_per_sample = 16
     num_samples = int(size / (bits_per_sample / 8) / num_channels)
-    logger.info("number of samples: {num_samples} (x{num_channels})")
+    logfile.info("number of samples: {num_samples} (x{num_channels})")
     
     num_remain = num_samples * num_channels
     # TODO: factor out the timing estimate pattern
@@ -437,16 +431,16 @@ def _read_data_chunk(stream, info, min_chunk_size=1000000, wait=2.0):
         start = time.time()
         data_chunks.append(stream.read(int16, num_chunk).newbyteorder())
         delta = time.time() - start
-        logger.debug("chunk size: {num_chunk}")
-        logger.debug("chunk read time: {delta}")
+        logfile.debug("chunk size: {num_chunk}")
+        logfile.debug("chunk read time: {delta}")
         time_left = delta * (num_remain - num_chunk) / num_chunk
-        logger.info("time left (estimate): {time_left} s")
+        logfile.info("time left (estimate): {time_left} s")
         num_remain = num_remain - num_chunk
         next_num_chunk = int(wait / delta * num_chunk)
-        logger.debug("next chunk size: {next_num_chunk}")
+        logfile.debug("next chunk size: {next_num_chunk}")
     data = concatenate(data_chunks)
     data = transpose(reshape(data, (num_samples, num_channels)))
-    logger.debug("end of the data chunk processing.")    
+    logfile.debug("end of the data chunk processing.")    
 
     return data
 
@@ -638,26 +632,20 @@ def main(args, options):
 
     filename = first(args)
 
-    # logger configuration
+    # logfile configuration
     verbosity = len(options.verbose) - len(options.silent)
-    logger.config.level = verbosity
-    def _format(channel, message, tag):
-        tag = tag or ""
-        return " {0!r:<9} | {1:<16} | {2}\n".format(channel, tag, message)
-    logger.config.format = _format
-    def _error_hook(message, ExceptionType=ValueError):
-        raise ExceptionType(message)
-    logger.error.set_hook(_error_hook)
+    logfile.config.level = verbosity
 
     output = first(options.output)
-    if output:
-        output_file = open(output, "w")
-    else:
+    if not output:
         base, ext = os.path.splitext(filename) 
-        output_file = open(base + ".npy", "w")
+        output = base + ".npy"
+    output_file = open(output, "w")
 
     data = read(filename)
+    logfile.debug("saving the data in {output!r}.")
     save(output_file, data)
+    logfile.debug("data saved.")
 
 if __name__ == "__main__":
     # TODO: implement 'check' (aka dry run)

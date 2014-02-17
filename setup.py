@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
 # Python 2.7 Standard Library
-pass
+import sys
 
-# Third-Party Library
-import about
+# Third-Party Libraries
 import setuptools
+
+# Local Libraries
+sys.path.insert(0, "")
+import about
+
 
 metadata = about.get_metadata("about_wave", "audio")
 contents = dict(packages=setuptools.find_packages())
