@@ -87,7 +87,7 @@ from .about_wave import *
 # Wave Writer
 # ------------------------------------------------------------------------------
 #
-def write(data, output=None, info=None, scale=None):
+def write(data, output=None, df=44100, scale=None):
     r"""Wave Audio File Format Writer
 
     Arguments
@@ -104,10 +104,7 @@ def write(data, output=None, info=None, scale=None):
         The object where the data is written in the WAVE format.
         An empty bitstream is created if no output is specified.
 
-      - `info`: a dictionary or `None` (default).
-
-        If there is a value attached to the `"sample rate"` key, 
-        it does override the default sample rate of `44100`.
+      - `df`: an integer, the sample rate (default: 44100).
 
       - `scale`: the scaling policy: `None`, `True` or `False`.
 
@@ -143,7 +140,7 @@ def write(data, output=None, info=None, scale=None):
     See Also
     --------
 
-      - `wave.read`,
+      - `audio.wave.read`,
       - `bitstream.Bitstream`.  
 """
     if isinstance(output, str):
@@ -188,11 +185,8 @@ def write(data, output=None, info=None, scale=None):
         high = ( 2**15 - 1) * ones_
         data = np.clip(data, low, high)
         data = data.astype(np.int16)
-
-    info = info or {}
  
     # TODO: log some info.
-  
     num_channels, num_samples = np.shape(data)
     file_size = 44 + 2 * np.size(data) # size in bytes
     stream.write("RIFF")
@@ -205,10 +199,9 @@ def write(data, output=None, info=None, scale=None):
     audio_format = 1
     stream.write(np.uint16(audio_format).newbyteorder())
     stream.write(np.uint16(num_channels).newbyteorder())
-    sample_rate = info.get("sample rate") or 44100
-    stream.write(np.uint32(sample_rate).newbyteorder())
+    stream.write(np.uint32(df).newbyteorder())
     bits_per_sample = 16
-    byte_rate = sample_rate * num_channels * (bits_per_sample // 8)
+    byte_rate = df * num_channels * (bits_per_sample // 8)
     stream.write(np.uint32(byte_rate).newbyteorder())
     block_align = num_channels * bits_per_sample // 8
     stream.write(np.uint16(block_align).newbyteorder())
@@ -237,7 +230,7 @@ def write(data, output=None, info=None, scale=None):
 # ------------------------------------------------------------------------------
 #
 
-def read(input, info=None, scale=None):
+def read(input, scale=None, output="data"):
     r"""
     Wave Audio File Format Reader
 
@@ -246,12 +239,6 @@ def read(input, info=None, scale=None):
 
       - `input`: the source of the WAVE data: a filename, file or a bitstream.
         
-
-      - `info`: a dictionary or `None` (default).
-
-         The value `info["sample rate"]` is set to the data sample rate if 
-         `info` is not `None`.
-
       - `scale`: the scaling policy: `None` (the default), `True` or `False`.
 
         This argument determines the linear transformation that scales
@@ -277,19 +264,28 @@ def read(input, info=None, scale=None):
             return a scale multiplier. For example, the setting `scale = True` 
             is a shortcut for the function defined by `scale(data) = 1.0 / amax(abs(data))`.
 
+      - `output`: a sequence of strings or comma-separated string of output names.
+        When more than one name is used, the data is returned as a tuple.
+        
+
     Returns
     -------
   
+    The set of returned values is selected by the `output` argument among:
+
       - `data`: the audio data, as a 2-dim numpy array with a dimension of 1 
          (mono) or 2 (stereo) along the first axe. Its data type depends on
          the scaling policy.
 
+      - `df`: the sampling rate, an integer.
+
     See Also
     --------
 
-      - `wave.write`,
+      - `audio.wave.write`,
       - `bitstream.BitStream`.
 """
+
     logfile.debug("loading the input.")
 
     if isinstance(input, str):
@@ -302,11 +298,10 @@ def read(input, info=None, scale=None):
         file = input
         stream = BitStream(file.read())
 
-    if info is None:
-        info = {}
-
-    read_header(stream, info)
-    read_format(stream, info)
+    # TODO: use chunk size information (wave files with garbage at the end)
+    # TODO: consider 32-bit padding of chunk data (see RIFF spec).
+    read_header(stream)
+    df, num_channels = read_format(stream)
     # TODO: need to take care of possible "LIST" chunks.
     # More generally, there is a pattern of 4 str (magic) + size (uint32)
     # then the data. We should exploit this structure in the code ...
@@ -314,13 +309,14 @@ def read(input, info=None, scale=None):
     # hack so that I don't have to change the code of read_data.
     # TODO: log the data in LIST
     stream_copy = stream.copy() # WOW, OMG, EVERYTHING IS COPIED. Should allow
-    # PARTIAL copy in bitstream !
+    # PARTIAL copy in bitstream ! Update: in bitstream 2.x, I have a read-only
+    # feature. TODO: upgrade and use that.
     if stream_copy.read(str, 4) == "LIST":
         assert stream.read(str, 4) == "LIST"
         num_bytes = stream.read(np.uint32).newbyteorder()
         _ = stream.read(np.uint8, num_bytes)
     # Rk: not very general, will work only with a single LIST chunk ...
-    data = read_data(stream, info)
+    data = read_data(stream, num_channels)
 
     if scale is None:
         A = 1.0 / float(2**15 - 1)
@@ -344,12 +340,21 @@ def read(input, info=None, scale=None):
 
     logfile.debug("data loaded.")
 
-    return data
+    # TODO: if output is a list or there is a trailing comma, return a tuple
+    #       instead of the value.
+    # TODO: check that the requested values exist (check early).
+    logfile.debug("selection of output values")
+    if isinstance(output, str):
+        args = [name.strip() for name in output.split(',')]
+    output = tuple([locals()[arg] for arg in args])
+    if len(output) == 1:
+        output = output[0]
+    return output
 
-def read_header(stream, info):
+def read_header(stream):
     logfile.debug("start of the header processing.")
     assert (len(stream) % 8 == 0)
-    file_size = len(stream) / 8
+    file_size = len(stream) // 8
     if file_size < 1024:
         file_size_B = file_size
         logfile.info("file size: {file_size_B} B")
@@ -365,7 +370,6 @@ def read_header(stream, info):
         logfile.error("invalid magic number {magic!r} (only 'RIFF' is supported).")
     chunk_size = stream.read(np.uint32).newbyteorder()
     logfile.debug("chunk size: {chunk_size} bytes.")
-
     if (chunk_size + 8) != file_size:
         logfile.error("file size ({file_size} bytes) inconsistent with the "
               "chunk size {chunk_size} bytes).")
@@ -374,7 +378,7 @@ def read_header(stream, info):
         logfile.error("the format {format!r} is not supported (only 'WAVE' is).")
     logfile.debug("end of the header processing.")
 
-def read_format(stream, info):
+def read_format(stream):
     logfile.debug("start of the format chunk processing.")
     format = stream.read(str, 4)
     if format != "fmt ":
@@ -386,15 +390,14 @@ def read_format(stream, info):
     if audio_format != 1:
        logfile.error("invalid audio format {audio_format}, only PCM (1) is supported.")
     num_channels = stream.read(np.uint16).newbyteorder()
-    info["num channels"] = num_channels
     if num_channels not in (1, 2):
         logfile.error("invalid number of channels {num_channels}, "
               "neither mono (1) nor stereo (2).")
     logfile.info("number of channels: {0}".format(num_channels))
-    sample_rate = stream.read(np.uint32).newbyteorder()
-    info["sample rate"] = sample_rate
-    #if sample_rate != 44100:
-    #    logfile.error("invalid sample rate {sample_rate}, only 44100 Hz is supported.")
+    df = stream.read(np.uint32).newbyteorder()
+
+    #if df != 44100:
+    #    logfile.error("invalid sample rate {df}, only 44100 Hz is supported.")
     byte_rate = stream.read(np.uint32).newbyteorder()
     block_align = stream.read(np.uint16).newbyteorder()
     bits_per_sample = stream.read(np.uint16).newbyteorder()
@@ -405,15 +408,15 @@ def read_format(stream, info):
     if not block_align == expected_block_align:
         logfile.error("inconsistent number of bits per sample {block_align}, "
               "should be {expected_block_align}.")
-    expected_byte_rate = sample_rate * num_channels * (bits_per_sample // 8) 
+    expected_byte_rate = df * num_channels * (bits_per_sample // 8) 
     if not byte_rate == expected_byte_rate:
         logfile.error("inconsistent byte rate {byte_rate}, "
               "should be {expected_byte_rate} byte/s.")
     logfile.debug("end of the format chunk processing.")
+    return df, num_channels
 
-def read_data(stream, info, min_chunk_size=1000000, wait=2.0):
+def read_data(stream, num_channels, min_chunk_size=1000000, wait=2.0):
     logfile.debug("start of the data chunk processing.")
-    num_channels = info.get("num channels")
     data_ID = stream.read(str, 4)
     if data_ID != "data":
        logfile.error("invalid data ID {data_ID} (only 'data' is supported).")
