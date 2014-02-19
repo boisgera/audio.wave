@@ -265,9 +265,9 @@ def read(input, scale=None, output="data"):
             is a shortcut for the function defined by `scale(data) = 1.0 / amax(abs(data))`.
 
       - `output`: a sequence of strings or comma-separated string of output names.
-        When more than one name is used, the data is returned as a tuple.
+        When `ouput` is a single string identifier, without a trailing comma, the
+        value is return unwrapped ; otherwise values(s) is (are) returned as a tuple.
         
-
     Returns
     -------
   
@@ -286,8 +286,20 @@ def read(input, scale=None, output="data"):
       - `bitstream.BitStream`.
 """
 
-    logfile.debug("loading the input.")
+    logfile.debug("checking output args spec.")
+    # TODO: validate the output argument syntax
+    # TODO: check that the required values exist (df or data only).
+    unwrap_output = False
+    if isinstance(output, str):
+        output_args = [name.strip() for name in output.split(',')]
+        if len(output_args) == 1:
+            unwrap_output = True
+        if len(output_args) >= 1 and not output_args[-1]: # trailing comma
+            output_args = output_args[:-1]
+    else:
+        output_args = output
 
+    logfile.debug("loading the input.")
     if isinstance(input, str):
         file = open(input, "r")
         stream = BitStream(file.read())
@@ -340,14 +352,9 @@ def read(input, scale=None, output="data"):
 
     logfile.debug("data loaded.")
 
-    # TODO: if output is a list or there is a trailing comma, return a tuple
-    #       instead of the value.
-    # TODO: check that the requested values exist (check early).
     logfile.debug("selection of output values")
-    if isinstance(output, str):
-        args = [name.strip() for name in output.split(',')]
-    output = tuple([locals()[arg] for arg in args])
-    if len(output) == 1:
+    output = tuple([locals()[arg] for arg in output_args])
+    if unwrap_output:
         output = output[0]
     return output
 
