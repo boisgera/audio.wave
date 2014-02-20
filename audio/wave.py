@@ -229,8 +229,7 @@ def write(data, output=None, df=44100, scale=None):
 # Wave Reader
 # ------------------------------------------------------------------------------
 #
-
-def read(input, scale=None, output="data"):
+def read(input, scale=None, returns="data"):
     r"""
     Wave Audio File Format Reader
 
@@ -264,14 +263,15 @@ def read(input, scale=None, output="data"):
             return a scale multiplier. For example, the setting `scale = True` 
             is a shortcut for the function defined by `scale(data) = 1.0 / amax(abs(data))`.
 
-      - `output`: a sequence of strings or comma-separated string of output names.
-        When `ouput` is a single string identifier, without a trailing comma, the
-        value is return unwrapped ; otherwise values(s) is (are) returned as a tuple.
+      - `returns`: a sequence of strings or comma-separated string of variable names.
+        When `returns` is a single string identifier, without a trailing comma, the
+        value with this name is returned ; otherwise the named value(s) is (are) 
+        returned as a tuple.
         
     Returns
     -------
   
-    The set of returned values is selected by the `output` argument among:
+    The set of returned values is selected by the `returns` argument among:
 
       - `data`: the audio data, as a 2-dim numpy array with a dimension of 1 
          (mono) or 2 (stereo) along the first axe. Its data type depends on
@@ -286,18 +286,18 @@ def read(input, scale=None, output="data"):
       - `bitstream.BitStream`.
 """
 
-    logfile.debug("checking output args spec.")
-    # TODO: validate the output argument syntax
+    logfile.debug("checking returned args spec.")
+    # TODO: validate the `returns` argument syntax
     # TODO: check that the required values exist (df or data only).
-    unwrap_output = False
-    if isinstance(output, str):
-        output_args = [name.strip() for name in output.split(',')]
-        if len(output_args) == 1:
-            unwrap_output = True
-        if len(output_args) >= 1 and not output_args[-1]: # trailing comma
-            output_args = output_args[:-1]
+    unwrap_returns = False
+    if isinstance(return, str):
+        returns_args = [name.strip() for name in returns.split(',')]
+        if len(returns_args) == 1:
+            unwrap_returns = True
+        if len(returns_args) >= 1 and not returns_args[-1]: # trailing comma
+            returns_args = returns_args[:-1]
     else:
-        output_args = output
+        returns_args = returns
 
     logfile.debug("loading the input.")
     if isinstance(input, str):
@@ -352,11 +352,11 @@ def read(input, scale=None, output="data"):
 
     logfile.debug("data loaded.")
 
-    logfile.debug("selection of output values")
-    output = tuple([locals()[arg] for arg in output_args])
-    if unwrap_output:
-        output = output[0]
-    return output
+    logfile.debug("selection of returns values")
+    returns = tuple([locals()[arg] for arg in returns_args])
+    if unwrap_returns:
+        returns = returns[0]
+    return returns
 
 def read_header(stream):
     logfile.debug("start of the header processing.")
