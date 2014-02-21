@@ -52,29 +52,14 @@ from bitstream import BitStream
 import logfile
 import script
 
-# TODO:
-# 
-#     Get rid of the "info" hack for read and write. Instead, for write,
-#     use extra keyword arguments, and for read an optional `output`
-#     attribute that is either a string or a list of strings that
-#     determines the values to return. The parameters would be `data`, `df`
-#     (instead of sample rate) ... and that's all ? Allow `dt` ? 
-#     Keep `num_channels` or don't keep it ? The motivation would
-#     be to have faster reads when `data` is not in the list ...
-#     UPDATE: do NOT allow these extra attributes BUT introduce an argument
-#     that is the number of samples to read. To get the number of channels,
-#     one can read 0 sample and query the shape of the returned array.
-#     Same thing for the "bit depath", (if we decide to support 8bits), 
-#     you can get it from the array data type if you read without scaling.
-
-# Q:  Should we declare/check against a list of 'vaiid' sample rates ? 
+# Q:  Should we declare/check against a list of 'vailid' sample rates ? 
 #     The pb is that this list is application-dependent ... some apps will
 #     support many, other very little (or only 1) sample rate. 
 #     A tentative -- quite inclusive -- list would be:
 #     8000, 11025, 22050, 24000, 32000, 44100, 48000, 96000, etc. (HIGHER)
 #     should we WARN (with logger) when an invalid name is used ?
-#     Rk: we could also check that the given sample rate has a simple ratio
-#     either with 48000 or with 44100.
+#     Rk: we could test that the sample rate is a multiple of either 
+#     8000, 11025 or 12000.
 
 #
 # Metadata
