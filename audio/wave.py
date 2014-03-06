@@ -95,13 +95,13 @@ def write(data, output=None, df=44100, scale=None):
 
         This argument determines the linear transformation that scales `data`
         before it is rounded and clipped the to 16-bit integer range.
-        The following table displays what value is mapped to the largest signed 
-        16-bit integer given `scale` and the type of `data`.
+        The following table displays what value is mapped to `2**15` 
+        given `scale` and the type of `data`.
 
 
         `scale`                                float                              integer
         -------   ----------------------------------   ----------------------------------
-        `None`    1.0 $\to$ $2^{15}$                   $2^{15}$ $\to$ $2^{15}-1$
+        `None`    1.0 $\to$ $2^{15}$                   $2^{15}$ $\to$ $2^{15}$
         `True`    `amax(abs(data))` $\to$ $2^{15}$     `amax(abs(data))` $\to$ $2^{15}$
         `False`   $2^{15}$ $\to$ $2^{15}$              $2^{15}$ $\to$ $2^{15}$ 
 
