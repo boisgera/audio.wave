@@ -101,21 +101,21 @@ def write(data, output=None, df=44100, scale=None):
 
         `scale`                                float                              integer
         -------   ----------------------------------   ----------------------------------
-        `None`    1.0 $\to$ $2^{15}-1$                 $2^{15}-1$ $\to$ $2^{15}-1$
-        `True`    `amax(abs(data))` $\to$ $2^{15}-1$   `amax(abs(data))` $\to$ $2^{15}-1$
-        `False`   $2^{15}-1$ $\to$ $2^{15}-1$          $2^{15}-1$ $\to$ $2^{15}-1$ 
+        `None`    1.0 $\to$ $2^{15}$                   $2^{15}$ $\to$ $2^{15}-1$
+        `True`    `amax(abs(data))` $\to$ $2^{15}$     `amax(abs(data))` $\to$ $2^{15}$
+        `False`   $2^{15}$ $\to$ $2^{15}$              $2^{15}$ $\to$ $2^{15}$ 
 
         
         Advanced scaling policies can be specified: 
 
           - if `scale` is a number, `data` is multiplied by this number before
             the conversion to 16-bit integers. For example, for an array of floats,
-            the `scale = None` policy could be implemented by setting `scale = 2**15 - 1`.
+            the `scale = None` policy could be implemented by setting `scale = 2**15`.
 
           - if `scale` is a function, it is given the `data` argument and should
             return a scale number. 
             For example, the policy `scale = True` is equivalent to the selection
-            of the scaling function defined by `scale(data) = 2**15 - 1 / amax(data)`.
+            of the scaling function defined by `scale(data) = 2**15 / amax(data)`.
 
     Returns
     -------
@@ -147,13 +147,13 @@ def write(data, output=None, df=44100, scale=None):
 
     if scale is None:
         if issubclass(data.dtype.type, np.floating):
-            A = float(2**15 - 1)
+            A = float(2**15)
         else:
             A = 1
     elif scale is False:
         A = 1
     elif scale is True:
-        A = float(2**15 - 1) / np.amax(abs(data))
+        A = float(2**15) / np.amax(abs(data))
     elif isinstance(scale, (int, float)):
         A = scale
     elif callable(scale):
@@ -233,16 +233,16 @@ def read(input, scale=None, returns="data"):
  
         `scale`                          scaling 
         --------   ----------------------------- 
-         `None`             $2^{15}-1$ $\to$ 1.0 
+         `None`               $2^{15}$ $\to$ 1.0 
          `True`      `amax(abs(data))` $\to$ 1.0
-        `False`    $2^{15}-1$ $\to$ $2^{15} - 1$
+        `False`          $2^{15}$ $\to$ $2^{15}$
 
 
         Advanced scaling policies can be specified: 
 
           - if `scale` is a number, it is used as a multiplier on the 16-bit  
             integer data. For example, `scale = None` corresponds to 
-            `scale = 1.0 / float(2**15 - 1)` and `scale = False` to `scale = 1`.
+            `scale = 1.0 / float(2**15)` and `scale = False` to `scale = 1`.
 
           - if `scale` is a function, it is given the `data` argument and should
             return a scale multiplier. For example, the setting `scale = True` 
@@ -316,7 +316,7 @@ def read(input, scale=None, returns="data"):
     data = read_data(stream, num_channels)
 
     if scale is None:
-        A = 1.0 / float(2**15 - 1)
+        A = 1.0 / float(2**15)
     elif scale is False:
         A = 1
     elif scale is True:
