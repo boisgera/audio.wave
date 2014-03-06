@@ -275,7 +275,7 @@ def read(input, scale=None, returns="data"):
     # TODO: validate the `returns` argument syntax
     # TODO: check that the required values exist (df or data only).
     unwrap_returns = False
-    if isinstance(return, str):
+    if isinstance(returns, str):
         returns_args = [name.strip() for name in returns.split(',')]
         if len(returns_args) == 1:
             unwrap_returns = True
