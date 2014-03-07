@@ -60,6 +60,13 @@ import script
 #     should we WARN (with logger) when an invalid name is used ?
 #     Rk: we could test that the sample rate is a multiple of either 
 #     8000, 11025 or 12000.
+#     Let the user specify a list of multiples ? Default: [1], aka no
+#     check ?
+
+# TODO: migrate values used in scale explanations to range. And be smarter
+#       with the amax so that we're never clipped afterwards.
+
+# BUG: test framework is broken ? 
 
 #
 # Metadata
