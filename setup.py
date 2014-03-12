@@ -11,8 +11,11 @@ sys.path.insert(0, "")
 import about
 
 
+
 metadata = about.get_metadata("about_wave", "audio")
 contents = dict(packages=setuptools.find_packages())
+# TODO: use an external requirements.txt instead and check the existence
+#       of numpy manually ? Or better offer some conditional installation ?
 requirements = dict(install_requires=\
                     ["numpy", "bitstream", "logfile", "lsprofcalltree"])
 
