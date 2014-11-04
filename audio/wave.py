@@ -21,18 +21,17 @@ WAVE format online information:
   - <http://www.tactilemedia.com/info/MCI_Control_Info.html>.
 """
 
-from __future__ import division
-
 #
 # Dependencies
 # ------------------------------------------------------------------------------
 # 
 #   - the standard Python 2.7 library,
 #   - the [NumPy](http://scipy.org/) library,
-#   - the `logfile` and `bitstream` modules from PyPi,
+#   - the `logfile`, `bitstream` and `wish` modules from PyPi.
 # 
 
-# Standard Python Library
+# Python 2.7 Standard Library
+from __future__ import division
 import inspect
 import os
 import os.path
@@ -43,8 +42,20 @@ import time
 from bitstream import BitStream
 import logfile
 import numpy as np
+import wish
 
-# Q:  Should we declare/check against a list of 'valid' sample rates ? 
+#
+# TODO
+# ------------------------------------------------------------------------------
+#
+# ### Dunno yet
+#
+#   - Is the `scale=True` policy what we want for multi-channel data ?
+#     (The current scheme scales with respect to the maximal value
+#     *across all axes*). Shouldn't we do a channel-by-channel scaling
+#     instead ?
+#
+#   - Should we declare/check against a list of 'valid' sample rates ? 
 #     The pb is that this list is application-dependent ... some apps will
 #     support many, other very little (or only 1) sample rate. 
 #     A tentative -- quite inclusive -- list would be:
@@ -55,17 +66,12 @@ import numpy as np
 #     Let the user specify a list of multiples ? Default: [1], aka no
 #     check ?
 
-# TODO: migrate values used in scale explanations to range. And be smarter
-#       with the amax so that we're never clipped afterwards.
-
-# BUG: test framework is broken ? 
-
 #
 # Metadata
 # ------------------------------------------------------------------------------
 #
 
-from .about_wave import *
+from audio.about_wave import *
 
 #
 # Wave Writer
@@ -74,58 +80,59 @@ from .about_wave import *
 def write(data, output=None, df=44100, scale=None):
     r"""Wave Audio File Format Writer
 
-    Arguments
-    ---------
+Arguments
+---------
 
-      - `data`: the audio data.
+  - `data`: the audio data.
+
+    The data should be either a 1-dim. numpy array or a 2-dim numpy 
+    array with a dimension of 1 (mono) or 2 (stereo) along the first 
+    axis. 
+
+  - `output`: a bitstream, filename, file object or `None` (default).
+
+    The object where the data is written in the WAVE format.
+    An empty bitstream is created if no output is specified.
+
+  - `df`: an integer, the sample rate (default: `44100`).
+
+  - `scale`: the scaling policy: `None`, `True` or `False`.
+
+    This argument determines the linear transformation that scales `data`
+    before it is rounded and clipped the to 16-bit integer range.
+    The following table displays what value is mapped to `2**15` 
+    given `scale` and the type of `data`.
+
+
+    `scale`                          float                        integer
+    -------   ----------------------------   ----------------------------
+    `None`    `1.0` to `2**15`               `2**15` to `2**15`
+    `True`    `amax(abs(data))` to `2**15`   `amax(abs(data))` to `2**15`
+    `False`   `2**15` to `2**15`             `2**15` to `2**15`
+
     
-        The data should be either a 1-dim. numpy array or a 2-dim numpy 
-        array with a dimension of 1 (mono) or 2 (stereo) along the first 
-        axis. 
+    Advanced scaling policies can be specified: 
 
-      - `output`: a bitstream, filename, file object or `None` (default).
+      - if `scale` is a number, `data` is multiplied by this number before
+        the conversion to 16-bit integers. For example, for an array of floats,
+        the `scale = None` policy could be implemented by setting 
+        `scale = 2**15`.
 
-        The object where the data is written in the WAVE format.
-        An empty bitstream is created if no output is specified.
+      - if `scale` is a function, it is given the `data` argument and should
+        return a scale number. 
+        For example, the policy `scale = True` is equivalent to the selection
+        of the scaling function defined by `scale(data) = 2**15 / amax(data)`.
 
-      - `df`: an integer, the sample rate (default: 44100).
+Returns
+-------
 
-      - `scale`: the scaling policy: `None`, `True` or `False`.
+  - `stream`: an output stream if no output was specified, `None` otherwise.
 
-        This argument determines the linear transformation that scales `data`
-        before it is rounded and clipped the to 16-bit integer range.
-        The following table displays what value is mapped to `2**15` 
-        given `scale` and the type of `data`.
+See Also
+--------
 
-
-        `scale`                                float                              integer
-        -------   ----------------------------------   ----------------------------------
-        `None`    1.0 $\to$ $2^{15}$                   $2^{15}$ $\to$ $2^{15}$
-        `True`    `amax(abs(data))` $\to$ $2^{15}$     `amax(abs(data))` $\to$ $2^{15}$
-        `False`   $2^{15}$ $\to$ $2^{15}$              $2^{15}$ $\to$ $2^{15}$ 
-
-        
-        Advanced scaling policies can be specified: 
-
-          - if `scale` is a number, `data` is multiplied by this number before
-            the conversion to 16-bit integers. For example, for an array of floats,
-            the `scale = None` policy could be implemented by setting `scale = 2**15`.
-
-          - if `scale` is a function, it is given the `data` argument and should
-            return a scale number. 
-            For example, the policy `scale = True` is equivalent to the selection
-            of the scaling function defined by `scale(data) = 2**15 / amax(data)`.
-
-    Returns
-    -------
-
-      - `stream`: an output stream if no output was specified, `None` otherwise.
-
-    See Also
-    --------
-
-      - `audio.wave.read`,
-      - `bitstream.Bitstream`.  
+  - `audio.wave.read`,
+  - `bitstream.Bitstream`.  
 """
     if isinstance(output, str):
         file = open(output, "w")
@@ -214,74 +221,74 @@ def write(data, output=None, df=44100, scale=None):
 # ------------------------------------------------------------------------------
 #
 def read(input, scale=None, returns="data"):
-    r"""
-    Wave Audio File Format Reader
+    r"""Wave Audio File Format Reader
 
-    Arguments
-    ---------
+Arguments
+---------
 
-      - `input`: the source of the WAVE data: a filename, file or a bitstream.
-        
-      - `scale`: the scaling policy: `None` (the default), `True` or `False`.
+  - `input`: the source of the WAVE data: a filename, file or a bitstream.
+    
+  - `scale`: the scaling policy: `None` (the default), `True` or `False`.
 
-        This argument determines the linear transformation that scales
-        the array of 16-bit signed integers stored in `input` before it is
-        returned.
-        The following table displays the scaling that corresponds to three
-        standard policies:
- 
-        `scale`                          scaling 
-        --------   ----------------------------- 
-         `None`               $2^{15}$ $\to$ 1.0 
-         `True`      `amax(abs(data))` $\to$ 1.0
-        `False`          $2^{15}$ $\to$ $2^{15}$
+    This argument determines the linear transformation that scales
+    the array of 16-bit signed integers stored in `input` before it is
+    returned.
+    The following table displays the scaling that corresponds to three
+    standard policies:
+
+    `scale`                       scaling 
+    --------   -------------------------- 
+     `None`    `2**15` to `1.0`
+     `True`    `amax(abs(data))` to `1.0`
+    `False`    `2**15` to `2**15`
 
 
-        Advanced scaling policies can be specified: 
+    Advanced scaling policies can be specified: 
 
-          - if `scale` is a number, it is used as a multiplier on the 16-bit  
-            integer data. For example, `scale = None` corresponds to 
-            `scale = 1.0 / float(2**15)` and `scale = False` to `scale = 1`.
+      - if `scale` is a number, it is used as a multiplier on the 16-bit  
+        integer data. For example, `scale = None` corresponds to 
+        `scale = 1.0 / float(2**15)` and `scale = False` to `scale = 1`.
 
-          - if `scale` is a function, it is given the `data` argument and should
-            return a scale multiplier. For example, the setting `scale = True` 
-            is a shortcut for the function defined by `scale(data) = 1.0 / amax(abs(data))`.
+      - if `scale` is a function, it is given the `data` argument and should
+        return a scale multiplier. For example, the setting `scale = True` 
+        is a shortcut for the function defined by `scale(data) = 1.0 / amax(abs(data))`.
 
-      - `returns`: a sequence of strings or comma-separated string of variable names.
-        When `returns` is a single string identifier, without a trailing comma, the
-        value with this name is returned ; otherwise the named value(s) is (are) 
-        returned as a tuple.
-        
-    Returns
-    -------
-  
-    The set of returned values is selected by the `returns` argument among:
+  - `returns`: a string of comma-separated variable names.
+    When `returns` is a single variable name, without a trailing comma, the
+    value with this name is returned ; otherwise the named value(s) is (are) 
+    returned as a tuple.
+    
+Returns
+-------
 
-      - `data`: the audio data, as a 2-dim numpy array with a dimension of 1 
-         (mono) or 2 (stereo) along the first axe. Its data type depends on
-         the scaling policy.
+The set of returned values is selected by the `returns` argument among:
 
-      - `df`: the sampling rate, an integer.
+  - `data`: the audio data, as a 2-dim numpy array with a dimension of 1 
+     (mono) or 2 (stereo) along the first axe. Its data type depends on
+     the scaling policy.
 
-    See Also
-    --------
+  - `df`: the sampling rate, an integer.
 
-      - `audio.wave.write`,
-      - `bitstream.BitStream`.
+See Also
+--------
+
+  - `audio.wave.write`,
+  - `bitstream.BitStream`.
 """
 
     logfile.debug("checking returned args spec.")
-    # TODO: validate the `returns` argument syntax
-    # TODO: check that the required values exist (df or data only).
-    unwrap_returns = False
-    if isinstance(returns, str):
-        returns_args = [name.strip() for name in returns.split(',')]
-        if len(returns_args) == 1:
-            unwrap_returns = True
-        if len(returns_args) >= 1 and not returns_args[-1]: # trailing comma
-            returns_args = returns_args[:-1]
-    else:
-        returns_args = returns
+##   OBSOLETE
+#    # TODO: validate the `returns` argument syntax
+#    # TODO: check that the required values exist (df or data only).
+#    unwrap_returns = False
+#    if isinstance(returns, str):
+#        returns_args = [name.strip() for name in returns.split(',')]
+#        if len(returns_args) == 1:
+#            unwrap_returns = True
+#        if len(returns_args) >= 1 and not returns_args[-1]: # trailing comma
+#            returns_args = returns_args[:-1]
+#    else:
+#        returns_args = returns
 
     logfile.debug("loading the input.")
     if isinstance(input, str):
@@ -336,11 +343,13 @@ def read(input, scale=None, returns="data"):
 
     logfile.debug("data loaded.")
 
-    logfile.debug("selection of returns values")
-    returns = tuple([locals()[arg] for arg in returns_args])
-    if unwrap_returns:
-        returns = returns[0]
-    return returns
+    logfile.debug("selection of return values")
+##   OBSOLETE
+#    returns = tuple([locals()[arg] for arg in returns_args])
+#    if unwrap_returns:
+#        returns = returns[0]
+#    return returns
+    return wish.grant(returns)
 
 def read_header(stream):
     logfile.debug("start of the header processing.")
@@ -479,13 +488,17 @@ Test write/read round trip consistency for floating-point numbers.
     ...     stream = write(data)
     ...     return read(stream)
 
-    >>> input = [-1.0, 0.0, 1.0]
-    >>> output = np.ravel(float64_write_read(input))
-    >>> _ = assert_array_max_ulp(input, output, maxulp=1)
+    >>> input = [[-1.0, 0.0, 2**(-15), 1.0 - 2**(-15)]]
+    >>> output = float64_write_read(input)
+    >>> (input == output).all()
+    True
+    >>> all(float64_write_read([[1.0]]) == (1.0 - 2**(-15)))
+    True
 
-    >>> input = np.arange(-2**15 + 1, 2**15) / float(2**15 - 1)
-    >>> output = np.ravel(float64_write_read(input))
-    >>> _= assert_array_max_ulp(input, output, maxulp=1)
+    >>> input = np.arange(-2**15, 2**15) / float(2**15)
+    >>> output = float64_write_read(input)
+    >>> (input == output).all()
+    True
     """
 
 def test_write_scale():
@@ -507,23 +520,23 @@ Integer input data:
 
     >>> stream = write(input, scale=True)
     >>> output = read(stream, scale=False)
-    >>> (output == [[-2**15 + 1, 0, 2**15 - 1]]).all()
+    >>> (output == [[-2**15, 0, 2**15 - 1]]).all()
     True
 
 Floating-point input data:
 
     >>> input = [[-0.5, 0.0, 0.5]]
-    >>> from numpy.testing import assert_array_max_ulp
     >>> stream = write(input)
     >>> output = read(stream)
-    >>> (abs(output - input) <= 2**(-15)).all()
+    >>> (output == input).all()
     True
 
     >>> stream = write(input, scale=True)
     >>> output = read(stream)
-    >>> _ = assert_array_max_ulp(output, [[-1.0, 0.0, 1.0]], maxulp=1)
+    >>> (output == [[-1.0, 0.0, 1.0 - 2**(-15)]]).all()
+    True
 
-    >>> input = np.arange(-2**15 + 1, 2**15).astype(np.float64)
+    >>> input = np.arange(-2**15, 2**15).astype(np.float64)
     >>> stream = write(input, scale=False)
     >>> output = read(stream, scale=False)
     >>> (output == input).all()
@@ -534,12 +547,11 @@ def test_read_scale():
     """
 Test the standard scaling policies of `read`.
 
-    >>> from numpy.testing import assert_array_max_ulp
-
     >>> input = [[0, 2**8]]
     >>> stream = write(input)
     >>> output = read(stream)
-    >>> _ = assert_array_max_ulp(output, [[0.0, 2**8/float(2**15-1)]], maxulp=1)
+    >>> (output == [[0.0, 2**8 / float(2**15)]]).all()
+    True
 
     >>> input = [[0, 2**8]]
     >>> stream = write(input)
@@ -550,7 +562,8 @@ Test the standard scaling policies of `read`.
     >>> input = [[0, 2**8]]
     >>> stream = write(input)
     >>> output = read(stream, scale=True)
-    >>> _ = assert_array_max_ulp(output, [[0.0, 1.0]], maxulp=1)
+    >>> (output == [[0.0, 1.0]]).all()
+    True
 """
 
 

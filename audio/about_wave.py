@@ -1,14 +1,16 @@
 # coding: utf-8
-"""
-WAVE File Reader and Writer
-"""
 
-__project__ = "audio.wave"
-__author__  = u"Sébastien Boisgérault <Sebastien.Boisgerault@mines-paristech.fr>"
-__url__     = "https://github.com/boisgera/audio.wave"
-__version__ = "3.1.2"
-__license__ = "MIT License"
+metadata = dict(
+  __name__        = "audio.wave",
+  __version__     = "3.0-alpha",
+  __license__     = "MIT License",
+  __author__      = u"Sébastien Boisgérault <Sebastien.Boisgerault@mines-paristech.fr>",
+  __url__         = "https://github.com/boisgera/audio.wave",
+  __summary__     = "WAV Files Reader/Writer",
+  __readme__      = None,
+  __classifiers__ = None,
+)
 
-export = "doc project author url version license".split()
-__all__ = ["__" + name + "__" for name in export]
+globals().update(metadata)
+__all__ = metadata.keys()
 
