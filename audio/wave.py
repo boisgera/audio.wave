@@ -29,14 +29,10 @@ from __future__ import division
 # 
 #   - the standard Python 2.7 library,
 #   - the [NumPy](http://scipy.org/) library,
-#   - the `logfile`, `bitstream` and `lsprofcalltree` modules from PyPi,
-#   - the `script` (not publicly available yet).
+#   - the `logfile` and `bitstream` modules from PyPi,
 # 
-# [lsprofcalltree]: http://people.gnome.org/~johan/lsprofcalltree.py
-#
 
 # Standard Python Library
-import cProfile
 import inspect
 import os
 import os.path
@@ -44,15 +40,11 @@ import sys
 import time
 
 # Third-Party Libraries
-import numpy as np
-import lsprofcalltree
-
-# Digital Audio Coding
 from bitstream import BitStream
 import logfile
-import script
+import numpy as np
 
-# Q:  Should we declare/check against a list of 'vailid' sample rates ? 
+# Q:  Should we declare/check against a list of 'valid' sample rates ? 
 #     The pb is that this list is application-dependent ... some apps will
 #     support many, other very little (or only 1) sample rate. 
 #     A tentative -- quite inclusive -- list would be:
@@ -447,24 +439,6 @@ def read_data(stream, num_channels, min_chunk_size=1000000, wait=2.0):
     logfile.debug("end of the data chunk processing.")    
 
     return data
-
-#
-# Profiling
-# ------------------------------------------------------------------------------
-#
-def profile(command):
-   """
-   Generate a kcachegrind profile during the execution of `command`.
-
-   The argument `command` should be usable in an `exec` statement.
-   The profile is stored in the file `wave.kcg`.
-   """
-   output_file = open("wave.kcg", "w")   
-   profile = cProfile.Profile()
-   profile.run(command)
-   kcg_profile = lsprofcalltree.KCacheGrind(profile)
-   kcg_profile.output(output_file)
-   output_file.close()   
    
 #
 # Unit Tests
@@ -586,78 +560,4 @@ def test(verbose=False):
     """
     import doctest
     return doctest.testmod(verbose=verbose)
-
-#
-# Command-Line Interface
-# ------------------------------------------------------------------------------
-#
-
-# TODO: introduce -r -w (read/write) or detection by extension (.wav or .npy)
-#       or -i -e (import / export), maybe more explicit (numpy POV still).
-#       document that .npy is the numpy save/load binary format.
-
-def help():
-    """
-Return the following message:
-"""
-    message = \
-"""
-usage: 
-    python {filename} [OPTIONS] FILENAME
-
-options: -h, --help ............................ display help message and exit,
-         -o OUTPUT, --output=OUTPUT ............ select output filename,
-         -p, --profile ......................... generate kcachegrind data,
-         -s, --silent .......................... silent mode (may be repeated),
-         -t, --test ............................ run the module self tests,
-         -v, --verbose ......................... verbose mode (may be repeated).
-"""
-    return message.format(filename=os.path.basename(__file__))
-
-help.__doc__ = "\nReturn the following message:\n\n" + \
-               "\n".join(4*" " + line for line in help().splitlines()) 
-
-def main(args, options):
-    """
-    Command-line main entry point
-    """
-    first = script.first
-
-    if options.help:
-        print help()
-        sys.exit(0)
-    if options.test:
-        verbose = bool(options.verbose)
-        test_results = test(verbose=verbose)
-        sys.exit(test_results.failed)
-    if not args:
-        print help()
-        sys.exit(1)
-
-    filename = first(args)
-
-    # logfile configuration
-    verbosity = len(options.verbose) - len(options.silent)
-    logfile.config.level = verbosity
-
-    output = first(options.output)
-    if not output:
-        base, ext = os.path.splitext(filename) 
-        output = base + ".npy"
-    output_file = open(output, "w")
-
-    data = read(filename)
-    logfile.debug("saving the data in {output!r}.")
-    np.save(output_file, data)
-    logfile.debug("data saved.")
-
-if __name__ == "__main__":
-    # TODO: implement 'check' (aka dry run)
-    options_list = "check help output= silent verbose profile test"
-    options, args = script.parse(options_list)
-    
-    if options.profile:
-        profile("main(args, options)")
-    else:
-        main(args, options)
 
