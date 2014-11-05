@@ -12,6 +12,9 @@ except ImportError:
     error = "pip is not installed, refer to <{url}> for instructions."
     raise ImportError(error.format(url="http://pip.readthedocs.org"))
 
+# Numpy
+import numpy
+
 # Extra Third-Party Libraries
 sys.path.insert(1, ".lib")
 try:
@@ -36,7 +39,7 @@ info = dict(
   metadata     = about.get_metadata(about_wave),
   code         = dict(packages=setuptools.find_packages()),
   data         = {},
-  requirements = dict(install_requires="numpy bitstream logfile wish".split()),
+  requirements = dict(install_requires="bitstream logfile wish".split()),
   scripts      = {},
   commands     = {},
   plugins      = {},
