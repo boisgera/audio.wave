@@ -175,8 +175,7 @@ See Also
         low  = (-2**15    ) * ones_
         high = ( 2**15 - 1) * ones_
         data = np.clip(data, low, high)
-        # BUG. This is not good enough: 0.9 would be cast to 0, not 1.
-        data = data.astype(np.int16) 
+        data = np.round(data).astype(np.int16) 
 
     # TODO: log some info.
     num_channels, num_samples = np.shape(data)
@@ -567,7 +566,7 @@ Test the standard scaling policies of `read`.
     True
 """
 
-def test_nearest_write():
+def test_write_nearest():
     """
 Make sure that write uses the nearest integer approximation of floating data.
 
