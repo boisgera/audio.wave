@@ -175,8 +175,9 @@ See Also
         low  = (-2**15    ) * ones_
         high = ( 2**15 - 1) * ones_
         data = np.clip(data, low, high)
-        data = data.astype(np.int16)
- 
+        # BUG. This is not good enough: 0.9 would be cast to 0, not 1.
+        data = data.astype(np.int16) 
+
     # TODO: log some info.
     num_channels, num_samples = np.shape(data)
     file_size = 44 + 2 * np.size(data) # size in bytes
@@ -566,11 +567,13 @@ Test the standard scaling policies of `read`.
     True
 """
 
-
-def test(verbose=False):
+def test_nearest_write():
     """
-    Run the unit tests
-    """
-    import doctest
-    return doctest.testmod(verbose=verbose)
+Make sure that write uses the nearest integer approximation of floating data.
 
+    >>> input = [[0.99]]
+    >>> stream = write(input, scale=False)
+    >>> output = read(stream, scale=False)
+    >>> output[0,0]
+    1
+"""
