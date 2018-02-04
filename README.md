@@ -1,8 +1,8 @@
 audio.wave
 ================================================================================
 
-    from numpy import *
     import audio.wave
+    from numpy import *
 
     df = 44100
     dt = 1.0 / df
