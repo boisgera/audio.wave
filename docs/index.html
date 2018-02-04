@@ -204,9 +204,97 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="toc">
+        Overview
+      </label>
+    
     <a href="." title="Overview" class="md-nav__link md-nav__link--active">
       Overview
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#audiowavewrite" title="audio.wave.write" class="md-nav__link">
+    audio.wave.write
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arguments" title="Arguments" class="md-nav__link">
+    Arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns" title="Returns" class="md-nav__link">
+    Returns
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#see-also" title="See Also" class="md-nav__link">
+    See Also
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audiowaveread" title="audio.wave.read" class="md-nav__link">
+    audio.wave.read
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arguments_1" title="Arguments" class="md-nav__link">
+    Arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_1" title="Returns" class="md-nav__link">
+    Returns
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#see-also_1" title="See Also" class="md-nav__link">
+    See Also
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -227,6 +315,81 @@
   
     
   
+  
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#audiowavewrite" title="audio.wave.write" class="md-nav__link">
+    audio.wave.write
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arguments" title="Arguments" class="md-nav__link">
+    Arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns" title="Returns" class="md-nav__link">
+    Returns
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#see-also" title="See Also" class="md-nav__link">
+    See Also
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audiowaveread" title="audio.wave.read" class="md-nav__link">
+    audio.wave.read
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arguments_1" title="Arguments" class="md-nav__link">
+    Arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_1" title="Returns" class="md-nav__link">
+    Returns
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#see-also_1" title="See Also" class="md-nav__link">
+    See Also
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+    </ul>
   
 </nav>
                   </div>
@@ -254,8 +417,172 @@ sound = sin(2*pi*f*t)
 
 audio.wave.write(sound, "A4.wav")
 </code></pre>
-<p><audio src="https://github.com/boisgera/audio.wave/blob/master/sounds/A4.wav?raw=true" controls>
-</audio></p>
+<div align=center>
+<audio src="https://github.com/boisgera/audio.wave/blob/master/sounds/A4.wav?raw=true" controls>
+</audio>
+</div>
+
+<h2 id="audiowavewrite"><code>audio.wave.write</code><a class="headerlink" href="#audiowavewrite" title="Permanent link">&para;</a></h2>
+<p>Wave Audio File Format Writer</p>
+<h3 id="arguments">Arguments<a class="headerlink" href="#arguments" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><code>data</code>: the audio data.</p>
+<p>The data should be either a 1-dim. numpy array or a 2-dim numpy 
+array with a dimension of 1 (mono) or 2 (stereo) along the first 
+axis. </p>
+</li>
+<li>
+<p><code>output</code>: a bitstream, filename, file object or <code>None</code> (default).</p>
+<p>The object where the data is written in the WAVE format.
+An empty bitstream is created if no output is specified.</p>
+</li>
+<li>
+<p><code>df</code>: an integer, the sample rate (default: <code>44100</code>).</p>
+</li>
+<li>
+<p><code>scale</code>: the scaling policy: <code>None</code>, <code>True</code> or <code>False</code>.</p>
+<p>This argument determines the linear transformation that scales <code>data</code>
+before it is rounded and clipped the to 16-bit integer range.
+The following table displays what value is mapped to <code>2**15</code> 
+given <code>scale</code> and the type of <code>data</code>.</p>
+<ul>
+<li>
+<p><code>scale = None</code>: <code>2**15</code> is mapped to <code>1.0</code></p>
+</li>
+<li>
+<p><code>scale = True</code>: <code>amax(abs(data))</code> is mapped to <code>1.0</code></p>
+</li>
+<li>
+<p><code>scale = False</code>: <code>2**15</code> is mapped to <code>2**15</code></p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><code>scale</code></th>
+<th>scaling (float)</th>
+<th>scaling (integer)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>None</code></td>
+<td><code>1.0</code> to <code>2**15</code></td>
+<td><code>2**15</code> to <code>2**15</code></td>
+</tr>
+<tr>
+<td><code>True</code></td>
+<td><code>amax(abs(data))</code> to <code>2**15</code></td>
+<td><code>amax(abs(data))</code> to <code>2**15</code></td>
+</tr>
+<tr>
+<td><code>False</code></td>
+<td><code>2**15</code> to <code>2**15</code></td>
+<td><code>2**15</code> to <code>2**15</code></td>
+</tr>
+</tbody>
+</table>
+<p>Advanced scaling policies can be specified: </p>
+<ul>
+<li>
+<p>if <code>scale</code> is a number, <code>data</code> is multiplied by this number before
+    the conversion to 16-bit integers. For example, for an array of floats,
+    the <code>scale = None</code> policy could be implemented by setting 
+    <code>scale = 2**15</code>.</p>
+</li>
+<li>
+<p>if <code>scale</code> is a function, it is given the <code>data</code> argument and should
+    return a scale number. 
+    For example, the policy <code>scale = True</code> is equivalent to the selection
+    of the scaling function defined by <code>scale(data) = 2**15 / amax(data)</code>.</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>stream</code>: an output stream if no output was specified, <code>None</code> otherwise.</li>
+</ul>
+<h3 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>audio.wave.read</code>,</li>
+<li><code>bitstream.Bitstream</code>.  </li>
+</ul>
+<h2 id="audiowaveread"><code>audio.wave.read</code><a class="headerlink" href="#audiowaveread" title="Permanent link">&para;</a></h2>
+<p>Wave Audio File Format Reader</p>
+<h3 id="arguments_1">Arguments<a class="headerlink" href="#arguments_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><code>input</code>: the source of the WAVE data: a filename, file or a bitstream.</p>
+</li>
+<li>
+<p><code>scale</code>: the scaling policy: <code>None</code> (the default), <code>True</code> or <code>False</code>.</p>
+<p>This argument determines the linear transformation that scales
+the array of 16-bit signed integers stored in <code>input</code> before it is
+returned.
+The following table displays the scaling that corresponds to three
+standard policies:</p>
+<table>
+<thead>
+<tr>
+<th><code>scale</code></th>
+<th>scaling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>None</code></td>
+<td><code>2**15</code> to <code>1.0</code></td>
+</tr>
+<tr>
+<td><code>True</code></td>
+<td><code>amax(abs(data))</code> to <code>1.0</code></td>
+</tr>
+<tr>
+<td><code>False</code></td>
+<td><code>2**15</code> to <code>2**15</code></td>
+</tr>
+</tbody>
+</table>
+<p>Advanced scaling policies can be specified: </p>
+<ul>
+<li>
+<p>if <code>scale</code> is a number, it is used as a multiplier on the 16-bit<br />
+    integer data. For example, <code>scale = None</code> corresponds to 
+    <code>scale = 1.0 / float(2**15)</code> and <code>scale = False</code> to <code>scale = 1</code>.</p>
+</li>
+<li>
+<p>if <code>scale</code> is a function, it is given the <code>data</code> argument and should
+    return a scale multiplier. For example, the setting <code>scale = True</code> 
+    is a shortcut for the function defined by <code>scale(data) = 1.0 / amax(abs(data))</code>.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>returns</code>: a string of comma-separated variable names.
+    When <code>returns</code> is a single variable name, without a trailing comma, the
+    value with this name is returned ; otherwise the named value(s) is (are) 
+    returned as a tuple.</p>
+</li>
+</ul>
+<h3 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h3>
+<p>The set of returned values is selected by the <code>returns</code> argument among:</p>
+<ul>
+<li>
+<p><code>data</code>: the audio data, as a 2-dim numpy array with a dimension of 1 
+     (mono) or 2 (stereo) along the first axe. Its data type depends on
+     the scaling policy.</p>
+</li>
+<li>
+<p><code>df</code>: the sampling rate, an integer.</p>
+</li>
+</ul>
+<h3 id="see-also_1">See Also<a class="headerlink" href="#see-also_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>audio.wave.write</code>,</li>
+<li><code>bitstream.BitStream</code>.</li>
+</ul>
                 
                   
                 

@@ -2,13 +2,53 @@
     "docs": [
         {
             "location": "/", 
-            "text": "Overview\n\n\nimport audio.wave\nfrom numpy import *\n\ndf = 44100\ndt = 1.0 / df\nf = 440.0\nT = 3.0\nt = r_[0.0:T:dt]\nsound = sin(2*pi*f*t)\n\naudio.wave.write(sound, \"A4.wav\")", 
+            "text": "Overview\n\n\nimport audio.wave\nfrom numpy import *\n\ndf = 44100\ndt = 1.0 / df\nf = 440.0\nT = 3.0\nt = r_[0.0:T:dt]\nsound = sin(2*pi*f*t)\n\naudio.wave.write(sound, \"A4.wav\")\n\n\n\n\n\n\n\n\n\n\n\n\naudio.wave.write\n\n\nWave Audio File Format Writer\n\n\nArguments\n\n\n\n\n\n\ndata\n: the audio data.\n\n\nThe data should be either a 1-dim. numpy array or a 2-dim numpy \narray with a dimension of 1 (mono) or 2 (stereo) along the first \naxis. \n\n\n\n\n\n\noutput\n: a bitstream, filename, file object or \nNone\n (default).\n\n\nThe object where the data is written in the WAVE format.\nAn empty bitstream is created if no output is specified.\n\n\n\n\n\n\ndf\n: an integer, the sample rate (default: \n44100\n).\n\n\n\n\n\n\nscale\n: the scaling policy: \nNone\n, \nTrue\n or \nFalse\n.\n\n\nThis argument determines the linear transformation that scales \ndata\n\nbefore it is rounded and clipped the to 16-bit integer range.\nThe following table displays what value is mapped to \n2**15\n \ngiven \nscale\n and the type of \ndata\n.\n\n\n\n\n\n\nscale = None\n: \n2**15\n is mapped to \n1.0\n\n\n\n\n\n\nscale = True\n: \namax(abs(data))\n is mapped to \n1.0\n\n\n\n\n\n\nscale = False\n: \n2**15\n is mapped to \n2**15\n\n\n\n\n\n\n\n\n\n\n\n\nscale\n\n\nscaling (float)\n\n\nscaling (integer)\n\n\n\n\n\n\n\n\n\n\nNone\n\n\n1.0\n to \n2**15\n\n\n2**15\n to \n2**15\n\n\n\n\n\n\nTrue\n\n\namax(abs(data))\n to \n2**15\n\n\namax(abs(data))\n to \n2**15\n\n\n\n\n\n\nFalse\n\n\n2**15\n to \n2**15\n\n\n2**15\n to \n2**15\n\n\n\n\n\n\n\n\nAdvanced scaling policies can be specified: \n\n\n\n\n\n\nif \nscale\n is a number, \ndata\n is multiplied by this number before\n    the conversion to 16-bit integers. For example, for an array of floats,\n    the \nscale = None\n policy could be implemented by setting \n    \nscale = 2**15\n.\n\n\n\n\n\n\nif \nscale\n is a function, it is given the \ndata\n argument and should\n    return a scale number. \n    For example, the policy \nscale = True\n is equivalent to the selection\n    of the scaling function defined by \nscale(data) = 2**15 / amax(data)\n.\n\n\n\n\n\n\n\n\n\n\nReturns\n\n\n\n\nstream\n: an output stream if no output was specified, \nNone\n otherwise.\n\n\n\n\nSee Also\n\n\n\n\naudio.wave.read\n,\n\n\nbitstream.Bitstream\n.  \n\n\n\n\naudio.wave.read\n\n\nWave Audio File Format Reader\n\n\nArguments\n\n\n\n\n\n\ninput\n: the source of the WAVE data: a filename, file or a bitstream.\n\n\n\n\n\n\nscale\n: the scaling policy: \nNone\n (the default), \nTrue\n or \nFalse\n.\n\n\nThis argument determines the linear transformation that scales\nthe array of 16-bit signed integers stored in \ninput\n before it is\nreturned.\nThe following table displays the scaling that corresponds to three\nstandard policies:\n\n\n\n\n\n\n\n\nscale\n\n\nscaling\n\n\n\n\n\n\n\n\n\n\nNone\n\n\n2**15\n to \n1.0\n\n\n\n\n\n\nTrue\n\n\namax(abs(data))\n to \n1.0\n\n\n\n\n\n\nFalse\n\n\n2**15\n to \n2**15\n\n\n\n\n\n\n\n\nAdvanced scaling policies can be specified: \n\n\n\n\n\n\nif \nscale\n is a number, it is used as a multiplier on the 16-bit\n\n    integer data. For example, \nscale = None\n corresponds to \n    \nscale = 1.0 / float(2**15)\n and \nscale = False\n to \nscale = 1\n.\n\n\n\n\n\n\nif \nscale\n is a function, it is given the \ndata\n argument and should\n    return a scale multiplier. For example, the setting \nscale = True\n \n    is a shortcut for the function defined by \nscale(data) = 1.0 / amax(abs(data))\n.\n\n\n\n\n\n\n\n\n\n\nreturns\n: a string of comma-separated variable names.\n    When \nreturns\n is a single variable name, without a trailing comma, the\n    value with this name is returned ; otherwise the named value(s) is (are) \n    returned as a tuple.\n\n\n\n\n\n\nReturns\n\n\nThe set of returned values is selected by the \nreturns\n argument among:\n\n\n\n\n\n\ndata\n: the audio data, as a 2-dim numpy array with a dimension of 1 \n     (mono) or 2 (stereo) along the first axe. Its data type depends on\n     the scaling policy.\n\n\n\n\n\n\ndf\n: the sampling rate, an integer.\n\n\n\n\n\n\nSee Also\n\n\n\n\naudio.wave.write\n,\n\n\nbitstream.BitStream\n.", 
             "title": "Overview"
         }, 
         {
             "location": "/#overview", 
             "text": "import audio.wave\nfrom numpy import *\n\ndf = 44100\ndt = 1.0 / df\nf = 440.0\nT = 3.0\nt = r_[0.0:T:dt]\nsound = sin(2*pi*f*t)\n\naudio.wave.write(sound, \"A4.wav\")", 
             "title": "Overview"
+        }, 
+        {
+            "location": "/#audiowavewrite", 
+            "text": "Wave Audio File Format Writer", 
+            "title": "audio.wave.write"
+        }, 
+        {
+            "location": "/#arguments", 
+            "text": "data : the audio data.  The data should be either a 1-dim. numpy array or a 2-dim numpy \narray with a dimension of 1 (mono) or 2 (stereo) along the first \naxis.     output : a bitstream, filename, file object or  None  (default).  The object where the data is written in the WAVE format.\nAn empty bitstream is created if no output is specified.    df : an integer, the sample rate (default:  44100 ).    scale : the scaling policy:  None ,  True  or  False .  This argument determines the linear transformation that scales  data \nbefore it is rounded and clipped the to 16-bit integer range.\nThe following table displays what value is mapped to  2**15  \ngiven  scale  and the type of  data .    scale = None :  2**15  is mapped to  1.0    scale = True :  amax(abs(data))  is mapped to  1.0    scale = False :  2**15  is mapped to  2**15       scale  scaling (float)  scaling (integer)      None  1.0  to  2**15  2**15  to  2**15    True  amax(abs(data))  to  2**15  amax(abs(data))  to  2**15    False  2**15  to  2**15  2**15  to  2**15     Advanced scaling policies can be specified:     if  scale  is a number,  data  is multiplied by this number before\n    the conversion to 16-bit integers. For example, for an array of floats,\n    the  scale = None  policy could be implemented by setting \n     scale = 2**15 .    if  scale  is a function, it is given the  data  argument and should\n    return a scale number. \n    For example, the policy  scale = True  is equivalent to the selection\n    of the scaling function defined by  scale(data) = 2**15 / amax(data) .", 
+            "title": "Arguments"
+        }, 
+        {
+            "location": "/#returns", 
+            "text": "stream : an output stream if no output was specified,  None  otherwise.", 
+            "title": "Returns"
+        }, 
+        {
+            "location": "/#see-also", 
+            "text": "audio.wave.read ,  bitstream.Bitstream .", 
+            "title": "See Also"
+        }, 
+        {
+            "location": "/#audiowaveread", 
+            "text": "Wave Audio File Format Reader", 
+            "title": "audio.wave.read"
+        }, 
+        {
+            "location": "/#arguments_1", 
+            "text": "input : the source of the WAVE data: a filename, file or a bitstream.    scale : the scaling policy:  None  (the default),  True  or  False .  This argument determines the linear transformation that scales\nthe array of 16-bit signed integers stored in  input  before it is\nreturned.\nThe following table displays the scaling that corresponds to three\nstandard policies:     scale  scaling      None  2**15  to  1.0    True  amax(abs(data))  to  1.0    False  2**15  to  2**15     Advanced scaling policies can be specified:     if  scale  is a number, it is used as a multiplier on the 16-bit \n    integer data. For example,  scale = None  corresponds to \n     scale = 1.0 / float(2**15)  and  scale = False  to  scale = 1 .    if  scale  is a function, it is given the  data  argument and should\n    return a scale multiplier. For example, the setting  scale = True  \n    is a shortcut for the function defined by  scale(data) = 1.0 / amax(abs(data)) .      returns : a string of comma-separated variable names.\n    When  returns  is a single variable name, without a trailing comma, the\n    value with this name is returned ; otherwise the named value(s) is (are) \n    returned as a tuple.", 
+            "title": "Arguments"
+        }, 
+        {
+            "location": "/#returns_1", 
+            "text": "The set of returned values is selected by the  returns  argument among:    data : the audio data, as a 2-dim numpy array with a dimension of 1 \n     (mono) or 2 (stereo) along the first axe. Its data type depends on\n     the scaling policy.    df : the sampling rate, an integer.", 
+            "title": "Returns"
+        }, 
+        {
+            "location": "/#see-also_1", 
+            "text": "audio.wave.write ,  bitstream.BitStream .", 
+            "title": "See Also"
         }
     ]
 }
