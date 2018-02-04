@@ -1,0 +1,24 @@
+site_name: audio.wave
+
+docs_dir: mkdocs
+
+site_dir: docs
+
+pages:
+  - Overview: index.md
+
+
+theme: "material" 
+
+markdown_extensions:
+  - admonition
+  - toc(permalink=true)
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+
+repo_name: "audio.wave"
+repo_url: "https://github.com/boisgera/audio.wave"
+edit_uri: edit/master/mkdocs/
+
+
