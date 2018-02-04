@@ -2,12 +2,12 @@
     "docs": [
         {
             "location": "/", 
-            "text": "Overview", 
+            "text": "Overview\n\n\nimport audio.wave\nfrom numpy import *\n\ndf = 44100\ndt = 1.0 / df\nf = 440.0\nT = 3.0\nt = r_[0.0:T:dt]\nsound = sin(2*pi*f*t)\n\naudio.wave.write(sound, \"A4.wav\")", 
             "title": "Overview"
         }, 
         {
             "location": "/#overview", 
-            "text": "", 
+            "text": "import audio.wave\nfrom numpy import *\n\ndf = 44100\ndt = 1.0 / df\nf = 440.0\nT = 3.0\nt = r_[0.0:T:dt]\nsound = sin(2*pi*f*t)\n\naudio.wave.write(sound, \"A4.wav\")", 
             "title": "Overview"
         }
     ]
