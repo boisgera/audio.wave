@@ -14,3 +14,6 @@ audio.wave
     audio.wave.write(sound, "A4.wav")
 
 
+<audio control>
+<source src="sounds/A4.wav" type="audio/wav">
+</audio>
